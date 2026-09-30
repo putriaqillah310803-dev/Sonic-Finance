@@ -765,10 +765,10 @@ async def _run_daily_summary():
     day = datetime.now(timezone.utc).date().isoformat()
     owner = os.environ.get("OWNER_EMAIL")
     if not owner:
-        return
+        return None
     data = await _daily_summary_payload(day)
     html = email_service.build_daily_summary_html(day, data)
-    await email_service.send_email(to=owner, subject=f"Ringkasan Harian Sonic Finance — {day}", html=html)
+    return await email_service.send_email(to=owner, subject=f"Ringkasan Harian Sonic Finance — {day}", html=html)
 
 
 @api.post("/cron/daily-summary")
@@ -785,8 +785,13 @@ async def cron_daily_summary(request: Request):
 
 @api.post("/reports/email-summary")
 async def email_summary_now(admin: dict = Depends(require_admin)):
-    await _run_daily_summary()
-    return {"ok": True, "sent_to": os.environ.get("OWNER_EMAIL")}
+    owner = os.environ.get("OWNER_EMAIL")
+    if not owner:
+        raise HTTPException(status_code=400, detail="OWNER_EMAIL belum diatur")
+    result = await _run_daily_summary()
+    if not result:
+        raise HTTPException(status_code=502, detail="Gagal mengirim email ringkasan")
+    return {"ok": True, "sent_to": owner, "email_id": result}
 
 
 @api.get("/")
