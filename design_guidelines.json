@@ -1,0 +1,164 @@
+{
+  "project_name": "SonicGo - Sonic Chicken Internal F&B ERP",
+  "archetype": "THE PERFORMANCE PRO / CORPORATE F&B HIGH-DENSITY",
+  "theme": "Clean corporate dashboard with warm crimson red branding (#DC2626 / #B91C1C) for Sonic Chicken fried chicken business",
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "body_font": "Plus Jakarta Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_family_imports": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
+    "hierarchy": {
+      "h1": "text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight",
+      "h2": "text-xl sm:text-2xl font-bold tracking-tight",
+      "h3": "text-lg sm:text-xl font-semibold",
+      "h4": "text-base font-semibold",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "caption_mono": "font-mono text-xs sm:text-sm uppercase tracking-wider",
+      "metric_value": "font-mono text-2xl sm:text-3xl font-extrabold tracking-tight"
+    }
+  },
+  "colors": {
+    "brand": {
+      "primary": "#DC2626",
+      "primary_hover": "#B91C1C",
+      "primary_active": "#991B1B",
+      "primary_light": "#FEF2F2",
+      "secondary": "#EA580C",
+      "accent": "#F59E0B"
+    },
+    "semantic": {
+      "success": "#16A34A",
+      "success_bg": "#DCFCE7",
+      "warning": "#D97706",
+      "warning_bg": "#FEF3C7",
+      "danger": "#DC2626",
+      "danger_bg": "#FEE2E2",
+      "info": "#2563EB",
+      "info_bg": "#DBEAFE"
+    },
+    "neutrals_light": {
+      "bg_root": "#F8FAFC",
+      "card_bg": "#FFFFFF",
+      "border": "#E2E8F0",
+      "text_primary": "#0F172A",
+      "text_secondary": "#475569",
+      "text_muted": "#64748B"
+    },
+    "neutrals_dark": {
+      "bg_root": "#090D16",
+      "card_bg": "#111827",
+      "border": "#1F2937",
+      "text_primary": "#F9FAFB",
+      "text_secondary": "#D1D5DB",
+      "text_muted": "#9CA3AF"
+    },
+    "channels": {
+      "dine_in": "#10B981",
+      "grabfood": "#00B14F",
+      "gofood": "#00AA13",
+      "shopeefood": "#EE4D2D"
+    }
+  },
+  "layout_and_spacing": {
+    "mode": "MODE B - High Density ERP Grid with Touch-Optimized Tablet Controls",
+    "sidebar": "Fixed responsive sidebar with mobile sheet drawer; includes multi-branch switcher, user role status, language switcher (ID/EN)",
+    "header": "Sticky header with z-50, backdrop-blur-md, search bar, active branch badge, shift indicator, quick action buttons, notification drawer for low stock / debt alerts",
+    "grid_gaps": "gap-4 sm:gap-6",
+    "container_padding": "p-4 sm:p-6 lg:p-8",
+    "card_padding": "p-4 sm:p-5",
+    "border_radius": "rounded-xl for cards and dialogs, rounded-lg for input buttons"
+  },
+  "image_urls": {
+    "brand_logo": "https://images.unsplash.com/photo-1767438030771-4f1d20615881?crop=entropy&cs=srgb&fm=jpg&q=85&w=200",
+    "chicken_dish_1": "https://images.unsplash.com/photo-1767438030771-4f1d20615881?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "chicken_dish_2": "https://images.unsplash.com/photo-1788869519869-3dc12e6617ee?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "chicken_dish_3": "https://images.unsplash.com/photo-1764018292116-003fd7d1a0ba?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "chicken_dish_4": "https://images.unsplash.com/photo-1766589221324-656419e4c844?crop=entropy&cs=srgb&fm=jpg&q=85"
+  },
+  "modules_and_pages": [
+    {
+      "id": "dashboard",
+      "title": "Dashboard Operations",
+      "components": [
+        "KPI Cards: Total Sales (Rp), Total Expenses (Rp), Cash Flow Balance (Rp), Food Cost % (Target vs Actual)",
+        "Channel Breakdown Chart (Reguler/Dine-In, GrabFood, GoFood, ShopeeFood) with commission deductions",
+        "Recent Sales Activity Stream & Quick Input Shortcut",
+        "Low Stock Alerts & Spoilage Summary Banner"
+      ]
+    },
+    {
+      "id": "sales",
+      "title": "Sales Entry & Register",
+      "components": [
+        "Channel Dropdown (Reguler/Dine-In, GrabFood, GoFood, ShopeeFood)",
+        "Itemized Order Selection (Ayam Goreng Crispy, Paket Ayam Geprek, Wings, Es Teh, Air Mineral)",
+        "Automatic Channel Commission & Net Revenue Calculation (e.g. Grab 20%, GoFood 20%, Shopee 20%)",
+        "Payment Method (Cash, QRIS, Bank Transfer, EDC Debit/Credit)",
+        "Quick Tablet Numpad & Receipt Generation Modal"
+      ]
+    },
+    {
+      "id": "expenses",
+      "title": "Expenses & Credit Purchases",
+      "components": [
+        "Type Switcher: Petty Cash Expenses vs Credit Vendor Purchases (Hutang)",
+        "Vendor Selection Dropdown (PT Ayam Broiler Utama, CV Bumbu Rempah Nusantara, Toko Minyak Resto)",
+        "Category Picker (Raw Materials, Operational/Utilities, Packaging, Maintenance, Marketing)",
+        "Receipt / Invoice Attachment Dropzone simulation",
+        "Due Date Selector for Vendor Credit Purchases"
+      ]
+    },
+    {
+      "id": "inventory",
+      "title": "Inventory & Spoilage Management",
+      "components": [
+        "Stock Count Matrix (Weekly / Monthly Physical vs System Count)",
+        "Leftover & Spoilage Log Form (Reason: Expired, Burnt, Dropped, Shift Discrepancy)",
+        "TO-TI Inter-Branch Transfer Form (Branch Source -> Branch Target with Transfer Status)",
+        "Minimum Reorder Level Indicator & Stock Adjustment Log"
+      ]
+    },
+    {
+      "id": "debt",
+      "title": "Vendor Debt Tracking (Hutang Vendor)",
+      "components": [
+        "Vendor Summary Cards (Total Hutang Aktif, Due This Week, Overdue Balance)",
+        "Vendor Debt Table with Payment Log Modal",
+        "Record Partial / Full Payment Action with Petty Cash or Bank Account deducted"
+      ]
+    },
+    {
+      "id": "reports",
+      "title": "Financial & Operational Reports",
+      "components": [
+        "Date Range Filter Picker (Hari Ini, 7 Hari Terakhir, Bulan Ini, Custom Range)",
+        "Cash Report per Period & Cash Flow Ledger",
+        "Food Cost % Variance & Profitability Breakdown",
+        "Export to Excel / PDF instant action buttons with feedback toast"
+      ]
+    },
+    {
+      "id": "users_branches",
+      "title": "User Roles & Multi-Branch Control",
+      "components": [
+        "Role Permissions Matrix (Super Admin vs User Keuangan / Staff Toko)",
+        "Branch Management (Sudirman, Kemang, Bandung, Surabaya)",
+        "Language Toggle (Bahasa Indonesia / English) with full reactive UI translation"
+      ]
+    }
+  ],
+  "accessibility_and_testing": {
+    "data_testid_policy": "All buttons, inputs, dropdowns, table rows, tab triggers, modal toggles, language switches, and KPI metric cards MUST have descriptive data-testid attributes formatted in kebab-case (e.g., data-testid='sales-channel-select', data-testid='kpi-total-sales-value', data-testid='lang-toggle-id').",
+    "touch_targets": "Minimum 44px height for interactive buttons and input fields to support tablet usage in kitchen/cashier environments.",
+    "hover_contrast": "Always explicit hover styles with contrast check: hover:bg-red-700 hover:text-white or hover:bg-slate-100 dark:hover:bg-slate-800"
+  },
+  "instructions_to_main_agent": [
+    "Ensure language state (ID/EN) is globally managed and toggles all UI strings across Dashboard, Sales, Expenses, Inventory, Vendor Debt, Reports, and Auth.",
+    "Ensure multi-branch state is reactive, filtering metrics and tables by selected branch or 'All Branches'.",
+    "Implement realistic calculation logic for Food Cost % = (Beginning Inventory + Purchases - Ending Inventory) / Food Sales * 100.",
+    "Support toast notifications via Sonner for key actions like saving sales, submitting stock transfer, recording debt payment, and exporting report.",
+    "Use JetBrains Mono for monetary values (Rp), transaction IDs, and quantities to ensure clear tabular alignment.",
+    "All interactive elements must include data-testid attributes."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": "Follow high density tablet-friendly ERP principles. Avoid centered slop, use dark crimson red accents with high legibility neutral backgrounds, micro-animations on table rows and action triggers, explicit contrast on focus/hover, and sonner toast feedback."
+}
