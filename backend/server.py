@@ -297,7 +297,7 @@ def crud(collection, model, name, public_read=True):
         return await db[collection].find({}, {"_id": 0}).sort("created_at", -1).to_list(2000)
 
     @api.post(f"/{name}")
-    async def _create(body: model, user: dict = Depends(get_current_user)):
+    async def _create(body: model, user: dict = Depends(require_admin)):
         doc = body.model_dump()
         doc["id"] = new_id()
         doc["created_at"] = now_iso()
@@ -306,13 +306,13 @@ def crud(collection, model, name, public_read=True):
         return doc
 
     @api.put(f"/{name}/{{item_id}}")
-    async def _update(item_id: str, body: model, user: dict = Depends(get_current_user)):
+    async def _update(item_id: str, body: model, user: dict = Depends(require_admin)):
         doc = body.model_dump()
         await db[collection].update_one({"id": item_id}, {"$set": doc})
         return await db[collection].find_one({"id": item_id}, {"_id": 0})
 
     @api.delete(f"/{name}/{{item_id}}")
-    async def _delete(item_id: str, user: dict = Depends(get_current_user)):
+    async def _delete(item_id: str, user: dict = Depends(require_admin)):
         await db[collection].delete_one({"id": item_id})
         return {"ok": True}
 
