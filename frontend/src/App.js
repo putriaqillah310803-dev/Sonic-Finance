@@ -14,14 +14,12 @@ import FoodCost from "@/pages/FoodCost";
 import Reports from "@/pages/Reports";
 import MasterData from "@/pages/MasterData";
 import Users from "@/pages/Users";
-import { Drumstick } from "lucide-react";
+
 
 function Splash() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center animate-pulse">
-        <Drumstick className="h-8 w-8 text-white" />
-      </div>
+      <img src="/sonic-finance-logo.png" alt="Sonic Finance" className="h-16 w-16 rounded-2xl object-cover animate-pulse shadow-lg" />
     </div>
   );
 }

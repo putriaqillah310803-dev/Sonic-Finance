@@ -4,7 +4,8 @@ import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Drumstick, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
+
 import { apiErr } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -40,14 +41,12 @@ export default function Login() {
         <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-white/10" />
         <div className="absolute top-1/3 -left-10 h-60 w-60 rounded-full bg-black/10" />
         <div className="flex items-center gap-3 relative">
-          <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center">
-            <Drumstick className="h-7 w-7 text-primary" />
-          </div>
-          <span className="text-2xl font-extrabold">SonicGo</span>
+          <img src="/sonic-finance-logo.png" alt="Sonic Finance" className="h-14 w-14 rounded-2xl object-cover shadow-lg" />
+          <span className="text-2xl font-extrabold">Sonic Finance</span>
         </div>
         <div className="relative">
           <h2 className="text-4xl font-extrabold leading-tight mb-4">
-            Kelola Bisnis<br />Sonic Chicken<br />dalam Satu Layar.
+            Kelola Keuangan<br />Sonic Chicken<br /><span className="text-amber-300">dalam Satu Layar.</span>
           </h2>
           <p className="text-white/80 max-w-md">
             Keuangan, Penjualan, Persediaan & Food Cost — menggantikan pencatatan manual Excel dengan
@@ -69,10 +68,8 @@ export default function Login() {
 
         <div className="w-full max-w-sm animate-fade-up">
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center">
-              <Drumstick className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-extrabold">SonicGo</span>
+            <img src="/sonic-finance-logo.png" alt="Sonic Finance" className="h-12 w-12 rounded-xl object-cover" />
+            <span className="text-xl font-extrabold">Sonic Finance</span>
           </div>
 
           <h1 className="text-2xl font-extrabold tracking-tight mb-1">{t("login_title")}</h1>

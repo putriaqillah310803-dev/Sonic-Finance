@@ -5,12 +5,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader, PeriodFilter, usePeriod } from "@/components/Shared";
 import { toast } from "sonner";
-import { FileSpreadsheet, FileText, ArrowDownUp } from "lucide-react";
+import { FileSpreadsheet, FileText, ArrowDownUp, Mail } from "lucide-react";
 
 export default function Reports() {
-  const { t, branch } = useApp();
+  const { t, branch, isAdmin } = useApp();
   const ctrl = usePeriod();
   const [d, setD] = useState({});
+  const [sending, setSending] = useState(false);
 
   const load = async () => {
     const { start, end } = ctrl.range();
@@ -35,12 +36,25 @@ export default function Reports() {
     } catch (e) { toast.error("Export failed"); }
   };
 
+  const emailSummary = async () => {
+    setSending(true);
+    try {
+      await http.post("/reports/email-summary");
+      toast.success(t("summary_sent"));
+    } catch (e) { toast.error("Gagal mengirim"); } finally { setSending(false); }
+  };
+
   return (
     <div>
       <PageHeader title={t("nav_reports")} subtitle={t("reports")}
         right={
           <div className="flex flex-wrap items-center gap-2">
             <PeriodFilter ctrl={ctrl} t={t} />
+            {isAdmin && (
+              <Button variant="outline" onClick={emailSummary} disabled={sending} data-testid="email-summary-btn" className="gap-2 h-11">
+                <Mail className="h-4 w-4" /> {t("send_summary_now")}
+              </Button>
+            )}
             <Button variant="outline" onClick={() => doExport("excel")} data-testid="export-excel-btn" className="gap-2 h-11">
               <FileSpreadsheet className="h-4 w-4" /> {t("export_excel")}
             </Button>

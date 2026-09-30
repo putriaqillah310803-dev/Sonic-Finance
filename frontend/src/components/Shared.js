@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { daysAgo, today } from "@/lib/api";
+import { http, daysAgo, today, apiErr } from "@/lib/api";
+import { toast } from "sonner";
+import { Upload, FileText, X, Loader2 } from "lucide-react";
+
+export const LOGO_SRC = "/sonic-finance-logo.png";
 
 export function PageHeader({ title, subtitle, right }) {
   return (
@@ -106,5 +110,102 @@ export function StatusBadge({ status, t }) {
     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${map[status] || ""}`}>
       {label[status] || status}
     </span>
+  );
+}
+
+export function Logo({ className }) {
+  return (
+    <img src={LOGO_SRC} alt="Sonic Finance" className={className || "h-10 w-10 rounded-xl object-cover"} />
+  );
+}
+
+// Upload a receipt image; calls onUploaded(path) when done.
+export function ReceiptUpload({ value, onUploaded, testid }) {
+  const { t } = useApp();
+  const [busy, setBusy] = useState(false);
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const { data } = await http.post("/uploads/receipt", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      onUploaded(data.path);
+      toast.success(t("saved"));
+    } catch (err) {
+      toast.error(apiErr(err));
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {value ? (
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <ReceiptThumb path={value} size={40} />
+          <span className="text-xs text-slate-500 truncate flex-1">{t("view_receipt")}</span>
+          <button type="button" onClick={() => onUploaded(null)} data-testid={`${testid}-remove`}
+            className="text-slate-400 hover:text-red-600"><X className="h-4 w-4" /></button>
+        </div>
+      ) : (
+        <label className="flex items-center gap-2 h-11 px-3 rounded-lg border border-input cursor-pointer hover:bg-secondary w-full text-sm text-slate-500"
+          data-testid={testid}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          <span>{busy ? t("uploading") : t("upload_receipt")}</span>
+          <input type="file" accept="image/*,.pdf" className="hidden" onChange={onFile} disabled={busy} />
+        </label>
+      )}
+    </div>
+  );
+}
+
+// Renders a receipt thumbnail by fetching the authenticated file as a blob.
+export function ReceiptThumb({ path, size = 32 }) {
+  const [url, setUrl] = useState(null);
+  const [isPdf, setIsPdf] = useState(false);
+
+  useEffect(() => {
+    let revoked = null;
+    let active = true;
+    (async () => {
+      try {
+        const res = await http.get(`/files/${path}`, { responseType: "blob" });
+        if (!active) return;
+        if (res.data.type === "application/pdf") { setIsPdf(true); return; }
+        const u = URL.createObjectURL(res.data);
+        revoked = u;
+        setUrl(u);
+      } catch (e) { /* ignore */ }
+    })();
+    return () => { active = false; if (revoked) URL.revokeObjectURL(revoked); };
+  }, [path]);
+
+  const open = async () => {
+    try {
+      const res = await http.get(`/files/${path}`, { responseType: "blob" });
+      window.open(URL.createObjectURL(res.data), "_blank");
+    } catch (e) { /* ignore */ }
+  };
+
+  if (isPdf) {
+    return (
+      <button type="button" onClick={open} data-testid="receipt-thumb" title="PDF"
+        className="flex items-center justify-center rounded-md border border-border bg-secondary"
+        style={{ height: size, width: size }}>
+        <FileText className="h-4 w-4 text-primary" />
+      </button>
+    );
+  }
+  if (!url) return <div className="rounded-md bg-secondary animate-pulse" style={{ height: size, width: size }} />;
+  return (
+    <button type="button" onClick={open} data-testid="receipt-thumb" className="rounded-md overflow-hidden border border-border hover:ring-2 hover:ring-primary transition">
+      <img src={url} alt="receipt" className="object-cover" style={{ height: size, width: size }} />
+    </button>
   );
 }

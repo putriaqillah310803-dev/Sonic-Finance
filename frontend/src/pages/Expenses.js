@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PageHeader, SSelect } from "@/components/Shared";
+import { PageHeader, SSelect, ReceiptUpload, ReceiptThumb } from "@/components/Shared";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
@@ -22,8 +22,8 @@ export default function Expenses() {
   const [vendors, setVendors] = useState([]);
 
   const defBranch = branch !== "all" ? branch : branches[0]?.name || "";
-  const [ef, setEf] = useState({ date: today(), category: "Bahan Ayam", description: "", amount: "", branch: "" });
-  const [pf, setPf] = useState({ date: today(), vendor_id: "", description: "", amount: "", branch: "", due_date: today() });
+  const [ef, setEf] = useState({ date: today(), category: "Bahan Ayam", description: "", amount: "", branch: "", receipt_path: null });
+  const [pf, setPf] = useState({ date: today(), vendor_id: "", description: "", amount: "", branch: "", due_date: today(), receipt_path: null });
 
   const load = async () => {
     const [e, p, v] = await Promise.all([
@@ -44,7 +44,7 @@ export default function Expenses() {
     if (!ef.branch) return toast.error(t("branch"));
     try {
       await http.post("/expenses", { ...ef, amount: Number(ef.amount) });
-      toast.success(t("saved")); setEf({ ...ef, description: "", amount: "" }); load();
+      toast.success(t("saved")); setEf({ ...ef, description: "", amount: "", receipt_path: null }); load();
     } catch (err) { toast.error(apiErr(err)); }
   };
   const submitPur = async (e) => {
@@ -52,7 +52,7 @@ export default function Expenses() {
     if (!pf.branch || !pf.vendor_id) return toast.error(t("vendor"));
     try {
       await http.post("/purchases", { ...pf, amount: Number(pf.amount) });
-      toast.success(t("saved")); setPf({ ...pf, description: "", amount: "" }); load();
+      toast.success(t("saved")); setPf({ ...pf, description: "", amount: "", receipt_path: null }); load();
     } catch (err) { toast.error(apiErr(err)); }
   };
   const delExp = async (id) => { await http.delete(`/expenses/${id}`); load(); };
@@ -85,6 +85,8 @@ export default function Expenses() {
                   <Input value={ef.description} onChange={(e) => setEf({ ...ef, description: e.target.value })} className="h-11" data-testid="expense-desc" required /></div>
                 <div className="space-y-2"><Label>{t("amount")}</Label>
                   <Input type="number" value={ef.amount} onChange={(e) => setEf({ ...ef, amount: e.target.value })} className="h-11 font-mono" data-testid="expense-amount" required /></div>
+                <div className="space-y-2"><Label>{t("receipt")}</Label>
+                  <ReceiptUpload testid="expense-receipt" value={ef.receipt_path} onUploaded={(p) => setEf({ ...ef, receipt_path: p })} /></div>
                 <Button type="submit" className="w-full h-11 font-semibold" data-testid="expense-submit">{t("save")}</Button>
               </form>
             </Card>
@@ -94,16 +96,17 @@ export default function Expenses() {
                 <table className="w-full text-sm">
                   <thead><tr className="text-left text-xs font-mono uppercase text-slate-400 border-b border-border">
                     <th className="py-2 pr-3">{t("date")}</th><th className="py-2 pr-3">{t("category")}</th>
-                    <th className="py-2 pr-3">{t("description")}</th><th className="py-2 pr-3 text-right">{t("amount")}</th><th></th>
+                    <th className="py-2 pr-3">{t("description")}</th><th className="py-2 pr-3 text-right">{t("amount")}</th><th className="py-2 pr-3 text-center">{t("receipt")}</th><th></th>
                   </tr></thead>
                   <tbody>
-                    {expenses.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-slate-400">{t("no_data")}</td></tr>}
+                    {expenses.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t("no_data")}</td></tr>}
                     {expenses.map((r) => (
                       <tr key={r.id} className="border-b border-border/60 hover:bg-slate-50 dark:hover:bg-slate-800/40" data-testid={`expense-row-${r.id}`}>
                         <td className="py-2.5 pr-3 font-mono text-xs">{r.date}</td>
                         <td className="py-2.5 pr-3"><span className="text-xs px-2 py-0.5 rounded bg-secondary">{r.category}</span></td>
                         <td className="py-2.5 pr-3">{r.description}</td>
                         <td className="py-2.5 pr-3 text-right font-mono font-semibold">{fmtRp(r.amount)}</td>
+                        <td className="py-2.5 pr-3"><div className="flex justify-center">{r.receipt_path ? <ReceiptThumb path={r.receipt_path} /> : <span className="text-slate-300">—</span>}</div></td>
                         <td className="text-right"><button onClick={() => delExp(r.id)} data-testid={`expense-del-${r.id}`} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button></td>
                       </tr>
                     ))}
@@ -132,6 +135,8 @@ export default function Expenses() {
                   <Input type="number" value={pf.amount} onChange={(e) => setPf({ ...pf, amount: e.target.value })} className="h-11 font-mono" data-testid="purchase-amount" required /></div>
                 <div className="space-y-2"><Label>{t("due_date")}</Label>
                   <Input type="date" value={pf.due_date} onChange={(e) => setPf({ ...pf, due_date: e.target.value })} className="h-11" data-testid="purchase-due" /></div>
+                <div className="space-y-2"><Label>{t("receipt")}</Label>
+                  <ReceiptUpload testid="purchase-receipt" value={pf.receipt_path} onUploaded={(p) => setPf({ ...pf, receipt_path: p })} /></div>
                 <Button type="submit" className="w-full h-11 font-semibold" data-testid="purchase-submit">{t("save")}</Button>
               </form>
             </Card>
@@ -141,10 +146,10 @@ export default function Expenses() {
                 <table className="w-full text-sm">
                   <thead><tr className="text-left text-xs font-mono uppercase text-slate-400 border-b border-border">
                     <th className="py-2 pr-3">{t("date")}</th><th className="py-2 pr-3">{t("vendor")}</th>
-                    <th className="py-2 pr-3">{t("due_date")}</th><th className="py-2 pr-3 text-right">{t("amount")}</th><th className="py-2 pr-3">{t("status")}</th>
+                    <th className="py-2 pr-3">{t("due_date")}</th><th className="py-2 pr-3 text-right">{t("amount")}</th><th className="py-2 pr-3">{t("status")}</th><th className="py-2 pr-3 text-center">{t("receipt")}</th>
                   </tr></thead>
                   <tbody>
-                    {purchases.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-slate-400">{t("no_data")}</td></tr>}
+                    {purchases.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t("no_data")}</td></tr>}
                     {purchases.map((r) => (
                       <tr key={r.id} className="border-b border-border/60" data-testid={`purchase-row-${r.id}`}>
                         <td className="py-2.5 pr-3 font-mono text-xs">{r.date}</td>
@@ -152,6 +157,7 @@ export default function Expenses() {
                         <td className="py-2.5 pr-3 font-mono text-xs">{r.due_date}</td>
                         <td className="py-2.5 pr-3 text-right font-mono font-semibold">{fmtRp(r.amount)}</td>
                         <td className="py-2.5 pr-3"><span className="text-xs">{r.status}</span></td>
+                        <td className="py-2.5 pr-3"><div className="flex justify-center">{r.receipt_path ? <ReceiptThumb path={r.receipt_path} /> : <span className="text-slate-300">—</span>}</div></td>
                       </tr>
                     ))}
                   </tbody>

@@ -6,13 +6,15 @@ load_dotenv(ROOT_DIR / ".env")
 
 import os
 import uuid
+import hmac
+import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 import bcrypt
 import jwt
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -20,6 +22,8 @@ from pydantic import BaseModel, Field, EmailStr
 
 from exports import build_excel, build_pdf, _rp
 import seed_data
+import storage
+import email_service
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -169,6 +173,7 @@ class Expense(BaseModel):
     description: str
     amount: float
     branch: str
+    receipt_path: Optional[str] = None
 
 
 class Purchase(BaseModel):
@@ -178,6 +183,7 @@ class Purchase(BaseModel):
     amount: float
     branch: str
     due_date: Optional[str] = None
+    receipt_path: Optional[str] = None
 
 
 class InventoryLog(BaseModel):
@@ -699,6 +705,90 @@ async def seed_endpoint(admin: dict = Depends(require_admin)):
     return {"ok": True}
 
 
+# ----------------------------- Receipt uploads -----------------------------
+@api.post("/uploads/receipt")
+async def upload_receipt(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "bin"
+    if ext not in storage.MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Format tidak didukung (jpg, png, webp, pdf)")
+    data = await file.read()
+    if len(data) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Ukuran file maks 8MB")
+    ct = storage.MIME_TYPES.get(ext, file.content_type or "application/octet-stream")
+    path = f"{storage.APP_NAME}/receipts/{user['id']}/{new_id()}.{ext}"
+    try:
+        result = await asyncio.to_thread(storage.put_object, path, data, ct)
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        raise HTTPException(status_code=502, detail="Gagal mengunggah file")
+    await db.files.insert_one({
+        "id": new_id(), "storage_path": result["path"], "original_filename": file.filename,
+        "content_type": ct, "size": result.get("size"), "is_deleted": False, "created_at": now_iso(),
+    })
+    return {"path": result["path"], "content_type": ct}
+
+
+@api.get("/files/{path:path}")
+async def serve_file(path: str, request: Request):
+    await get_current_user(request)
+    rec = await db.files.find_one({"storage_path": path, "is_deleted": False})
+    if not rec:
+        raise HTTPException(status_code=404, detail="File tidak ditemukan")
+    try:
+        data, ct = await asyncio.to_thread(storage.get_object, path)
+    except Exception as e:
+        logger.error(f"Serve failed: {e}")
+        raise HTTPException(status_code=502, detail="Gagal memuat file")
+    return Response(content=data, media_type=rec.get("content_type", ct))
+
+
+# ----------------------------- Daily summary email -----------------------------
+async def _daily_summary_payload(day: str):
+    q = {"date": day}
+    total_gross = await _sum("sales", q, "gross")
+    total_net = await _sum("sales", q, "net")
+    total_exp = await _sum("expenses", q, "amount")
+    fc = await compute_foodcost("all", day, day)
+    debt = 0.0
+    async for d in db.purchases.find({}, {"_id": 0}):
+        debt += float(d.get("amount", 0)) - float(d.get("paid", 0))
+    low = await db.products.find({"$expr": {"$lte": ["$stock", "$min_stock"]}, "min_stock": {"$gt": 0}},
+                                 {"_id": 0}).to_list(50)
+    return {
+        "total_gross": round(total_gross, 2), "total_net": round(total_net, 2),
+        "total_expenses": round(total_exp, 2), "cash_flow": round(total_net - total_exp, 2),
+        "food_cost_pct": fc["food_cost_pct"], "vendor_debt": round(debt, 2), "low_stock": low,
+    }
+
+
+async def _run_daily_summary():
+    day = datetime.now(timezone.utc).date().isoformat()
+    owner = os.environ.get("OWNER_EMAIL")
+    if not owner:
+        return
+    data = await _daily_summary_payload(day)
+    html = email_service.build_daily_summary_html(day, data)
+    await email_service.send_email(to=owner, subject=f"Ringkasan Harian Sonic Finance — {day}", html=html)
+
+
+@api.post("/cron/daily-summary")
+async def cron_daily_summary(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    auth = request.headers.get("Authorization", "")
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    secret = os.environ.get("WEBHOOK_CRON_SECRET", "")
+    if not token or not secret or not hmac.compare_digest(token, secret):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    asyncio.create_task(_run_daily_summary())
+    return {"ok": True, "queued": True}
+
+
+@api.post("/reports/email-summary")
+async def email_summary_now(admin: dict = Depends(require_admin)):
+    await _run_daily_summary()
+    return {"ok": True, "sent_to": os.environ.get("OWNER_EMAIL")}
+
+
 @api.get("/")
 async def root():
     return {"message": "SonicGo API"}
@@ -732,7 +822,12 @@ async def startup():
         await db.users.update_one({"email": admin_email},
                                   {"$set": {"password_hash": hash_password(admin_password), "role": "super_admin"}})
     await seed_data.seed(db)
-    logger.info("SonicGo startup complete")
+    try:
+        await asyncio.to_thread(storage.init_storage)
+        logger.info("Storage initialized")
+    except Exception as e:
+        logger.error(f"Storage init failed: {e}")
+    logger.info("Sonic Finance startup complete")
 
 
 @app.on_event("shutdown")

@@ -52,9 +52,7 @@ function Brand() {
   const { t } = useApp();
   return (
     <div className="flex items-center gap-2.5 px-5 py-5">
-      <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-        <Drumstick className="h-6 w-6 text-white" />
-      </div>
+      <img src="/sonic-finance-logo.png" alt="Sonic Finance" className="h-11 w-11 rounded-xl object-cover shadow-md" />
       <div>
         <div className="text-lg font-extrabold tracking-tight leading-none">{t("app_name")}</div>
         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sonic Chicken</div>

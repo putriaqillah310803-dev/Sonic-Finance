@@ -1,0 +1,9 @@
+crons:
+  - name: daily-summary
+    description: "Kirim ringkasan penjualan & food cost harian ke email pemilik Sonic Finance tiap malam 21:00 WITA"
+    cron: "0 21 * * *"
+    timezone: "Asia/Makassar"
+    endpoint: "{{BASE_URL}}/api/cron/daily-summary"
+    method: POST
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    enabled: true
