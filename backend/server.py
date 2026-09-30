@@ -24,6 +24,8 @@ from exports import build_excel, build_pdf, _rp
 import seed_data
 import storage
 import email_service
+import report_views
+import report_export
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -797,9 +799,6 @@ async def email_summary_now(admin: dict = Depends(require_admin)):
 @api.get("/")
 async def root():
     return {"message": "SonicGo API"}
-
-
-app.include_router(api)
 
 app.add_middleware(
     CORSMiddleware,
